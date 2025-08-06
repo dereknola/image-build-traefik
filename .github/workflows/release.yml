@@ -16,6 +16,12 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v4
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: "Read secrets"
       if: github.repository_owner == 'rancher'
       uses: rancher-eio/read-vault-secrets@main
@@ -30,13 +36,16 @@ jobs:
     # For forks, store docker credentials in GHA secrets
     - name: Build and push image
       uses: rancher/ecm-distro-tools/actions/publish-image@master
+      env:
+        TARGET_PLATFORMS: linux/amd64,linux/arm64
       with:
         image: hardened-traefik
+        make-target: image-push
         tag: ${{ github.event.release.tag_name }}
         public-repo: ${{ github.repository_owner }}
         public-username: ${{ github.repository_owner == 'rancher' && env.DOCKER_USERNAME || secrets.DOCKER_USERNAME }}
         public-password: ${{ github.repository_owner == 'rancher' && env.DOCKER_PASSWORD || secrets.DOCKER_PASSWORD }}
-
+        
         prime-repo: rancher
         prime-registry: ${{ env.PRIME_REGISTRY }}
         prime-username: ${{ env.PRIME_REGISTRY_USERNAME }}

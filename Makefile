@@ -11,7 +11,7 @@ ifndef TARGET_PLATFORMS
 	endif
 endif
 
-ORG ?= rancher
+REPO ?= rancher
 PKG ?= github.com/traefik/traefik/v3
 BUILD_META=-build$(shell date +%Y%m%d)
 TAG ?= $(if $(GITHUB_ACTION_TAG),$(GITHUB_ACTION_TAG),v3.5.0$(BUILD_META))
@@ -28,23 +28,31 @@ image-build:
 		--pull \
 		--build-arg PKG=$(PKG) \
 		--build-arg TAG=$(TAG:$(BUILD_META)=) \
-		--tag $(ORG)/hardened-traefik:$(TAG) \
+		--tag $(REPO)/hardened-traefik:$(TAG) \
 		--load \
 	.
 
 .PHONY: image-push
 image-push:
-	docker push $(ORG)/hardened-traefik:$(TAG)-$(ARCH)
+		docker buildx build \
+		--progress=plain \
+		--platform=$(TARGET_PLATFORMS) \
+		--pull \
+		--build-arg PKG=$(PKG) \
+		--build-arg TAG=$(TAG:$(BUILD_META)=) \
+		--tag $(REPO)/hardened-traefik:$(TAG) \
+		--push \
+	.
 
 .PHONY: image-scan
 image-scan:
-	trivy --severity $(SEVERITIES) --no-progress --ignore-unfixed $(ORG)/hardened-traefik:$(TAG)
+	trivy --severity $(SEVERITIES) --no-progress --ignore-unfixed $(REPO)/hardened-traefik:$(TAG)
 
 .PHONY: log
 log:
 	@echo "TARGET_PLATFORMS=$(TARGET_PLATFORMS)"
 	@echo "TAG=$(TAG:$(BUILD_META)=)"
-	@echo "ORG=$(ORG)"
+	@echo "REPO=$(REPO)"
 	@echo "SRC=$(SRC)"
 	@echo "BUILD_META=$(BUILD_META)"
 	@echo "UNAME_M=$(UNAME_M)"
