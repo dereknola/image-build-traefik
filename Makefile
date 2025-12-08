@@ -38,9 +38,13 @@ image-build:
 		--load .
 
 # Note the TAG is just the repo/image when pushing by digest
+# IID_FILE_FLAG is filled by ecm-distro-tools/action/publish-image
 .PHONY: image-push-digest
 image-push-digest:
 	docker buildx build \
+		${IID_FILE_FLAG} \
+		--sbom=true \
+		--attest type=provenance,mode=max \
 		--progress=plain \
 		--platform=$(TARGET_PLATFORMS) \
 		--metadata-file metadata-$(subst /,-,$(TARGET_PLATFORMS)).json \
