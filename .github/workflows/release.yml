@@ -49,7 +49,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: metadata-amd64
-        path: metadata-linux-amd64.json
+        path: metadata-*.json
         if-no-files-found: error
         retention-days: 1
 
@@ -95,10 +95,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: metadata-arm64
-        path: metadata-linux-arm64.json
+        path: metadata-*.json
         if-no-files-found: error
         retention-days: 1
-
 
   merge:
     permissions:
@@ -117,6 +116,23 @@ jobs:
         with:
           pattern: metadata-*
           merge-multiple: true
+      
+      - name: Display downloaded files
+        run: ls -la metadata-*
+
+      - name: Set DOCKERHUB_REPO
+        run: |
+          if [ "${{ github.repository_owner }}" == "rancher" ]; then
+            echo "DOCKERHUB_REPO=rancher/hardened-traefik" >> $GITHUB_ENV
+          else
+            echo "DOCKERHUB_REPO=${{ secrets.DOCKER_USERNAME }}/hardened-traefik" >> $GITHUB_ENV
+          fi
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKERHUB_REPO }}
 
       - name: "Read secrets"
         if: github.repository_owner == 'rancher'
@@ -132,6 +148,8 @@ jobs:
       - name: Create manifest list and push
         id: push-manifest
         uses: rancher/ecm-distro-tools/actions/publish-image@master
+        env:
+          DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta.outputs.json }}
         with:
           make-target: manifest-push
           image: hardened-traefik
