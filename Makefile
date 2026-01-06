@@ -47,7 +47,7 @@ image-push-digest:
 		--attest type=provenance,mode=max \
 		--progress=plain \
 		--platform=$(TARGET_PLATFORMS) \
-		--metadata-file metadata-$(subst /,-,$(TARGET_PLATFORMS)).json \
+		--metadata-file metadata-$(subst /,-,$(REPO))-$(subst /,-,$(TARGET_PLATFORMS)).json \
 		--output type=image,push-by-digest=true,name-canonical=true,push=true \
 		--pull \
 		--build-arg PKG=$(PKG) \
@@ -58,15 +58,12 @@ image-push-digest:
 image-scan:
 	trivy --severity $(SEVERITIES) --no-progress --ignore-unfixed $(REPO)/hardened-traefik:$(TAG)
 
-# Pushes manifests for the provided TARGET_PLATFORMS
 .PHONY: manifest-push
 manifest-push:
-	$(eval AMD64_DIGEST := $(if $(findstring linux/amd64,$(TARGET_PLATFORMS)),$(shell jq -r '.["containerimage.digest"]' metadata-linux-amd64.json),))
-	$(eval ARM64_DIGEST := $(if $(findstring linux/arm64,$(TARGET_PLATFORMS)),$(shell jq -r '.["containerimage.digest"]' metadata-linux-arm64.json),))
 	docker buildx imagetools create \
 		--tag $(REPO)/hardened-traefik:$(TAG) \
-		$(AMD64_DIGEST) \
-		$(ARM64_DIGEST)
+		$$(jq -r '.["containerimage.digest"]' metadata-$(subst /,-,$(REPO))-linux-amd64.json) \
+		$$(jq -r '.["containerimage.digest"]' metadata-$(subst /,-,$(REPO))-linux-arm64.json)
 
 .PHONY: log
 log:
