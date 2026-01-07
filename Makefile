@@ -64,6 +64,10 @@ manifest-push:
 		--tag $(REPO)/hardened-traefik:$(TAG) \
 		$$(jq -r '.["containerimage.digest"]' metadata-$(subst /,-,$(REPO))-linux-amd64.json) \
 		$$(jq -r '.["containerimage.digest"]' metadata-$(subst /,-,$(REPO))-linux-arm64.json)
+ifdef IID_FILE
+	@echo "Writing image digest to $(IID_FILE)"
+	docker buildx imagetools inspect --format "{{json .Manifest}}" $(REPO)/hardened-traefik:$(TAG) | jq -r '.digest' > "$(IID_FILE)"
+endif
 
 .PHONY: log
 log:
