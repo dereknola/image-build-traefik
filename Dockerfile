@@ -1,5 +1,5 @@
 ARG GO_IMAGE=rancher/hardened-build-base:v1.25.7b1
-FROM ${GO_IMAGE} AS builder
+FROM --platform=$BUILDPLATFORM ${GO_IMAGE} AS builder
 # setup required packages
 RUN set -x && \
     apk --no-cache add \
@@ -14,7 +14,8 @@ RUN set -x && \
 # setup the build
 ARG PKG
 ARG TAG
-ARG TARGETARCH
+ARG TARGETOS TARGETARCH
+ENV GOOS=${TARGETOS} GOARCH=${TARGETARCH}
 
 # Download and extract Release src tarball, we do this instead of cloning because the
 # static webui files are already generated and included in the tarball.
