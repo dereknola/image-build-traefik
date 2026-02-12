@@ -40,7 +40,13 @@ RUN if [ "${TARGETARCH}" = "amd64" ]; then \
 RUN install -s bin/* /usr/local/bin
 RUN traefik version
 
-FROM scratch
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2022 as final-windows
+COPY --from=builder /usr/local/bin/traefik /traefik.exe
+
+EXPOSE 80
+ENTRYPOINT ["/traefik"]
+
+FROM scratch as final-linux
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/
 COPY --from=builder /usr/local/bin/traefik /

@@ -44,6 +44,23 @@ jobs:
         prime-username: ${{ env.PRIME_REGISTRY_USERNAME }}
         prime-password: ${{ env.PRIME_REGISTRY_PASSWORD }}
         push-to-prime: ${{ github.repository_owner == 'rancher' }}
+    
+    - name: Build and push windows-amd64 digest image 
+      uses: rancher/ecm-distro-tools/actions/publish-image@master
+      with:
+        image: hardened-traefik
+        make-target: image-push-digest
+        platforms: windows/amd64
+        tag: ${{ github.event.release.tag_name }}
+        public-repo: ${{ github.repository_owner }}
+        public-username: ${{ github.repository_owner == 'rancher' && env.DOCKER_USERNAME || secrets.DOCKER_USERNAME }}
+        public-password: ${{ github.repository_owner == 'rancher' && env.DOCKER_PASSWORD || secrets.DOCKER_PASSWORD }}
+        
+        prime-repo: rancher
+        prime-registry: ${{ env.PRIME_REGISTRY }}
+        prime-username: ${{ env.PRIME_REGISTRY_USERNAME }}
+        prime-password: ${{ env.PRIME_REGISTRY_PASSWORD }}
+        push-to-prime: ${{ github.repository_owner == 'rancher' }}
 
     - name: Upload metadata files
       uses: actions/upload-artifact@v4

@@ -11,6 +11,14 @@ ifndef TARGET_PLATFORMS
 	endif
 endif
 
+ifeq ($(findstring linux,$(TARGET_PLATFORMS)),linux)
+	DOCKER_TARGET := final-linux
+else ifeq ($(findstring windows,$(TARGET_PLATFORMS)),windows)
+	DOCKER_TARGET := final-windows
+else
+	$(error Unsupported TARGET_PLATFORMS: $(TARGET_PLATFORMS))
+endif
+
 REPO ?= rancher
 PKG ?= github.com/traefik/traefik/v3
 BUILD_META=-build$(shell date +%Y%m%d)
@@ -50,6 +58,7 @@ image-push-digest:
 		--metadata-file metadata-$(subst /,-,$(REPO))-$(subst /,-,$(TARGET_PLATFORMS)).json \
 		--output type=image,push-by-digest=true,name-canonical=true,push=true \
 		--pull \
+		--target=$(DOCKER_TARGET) \
 		--build-arg PKG=$(PKG) \
 		--build-arg TAG=$(BTAG) \
 		--tag $(REPO)/hardened-traefik .
