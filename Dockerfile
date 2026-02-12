@@ -15,7 +15,6 @@ RUN set -x && \
 ARG PKG
 ARG TAG
 ARG TARGETOS TARGETARCH
-ENV GOOS=${TARGETOS} GOARCH=${TARGETARCH}
 
 # Download and extract Release src tarball, we do this instead of cloning because the
 # static webui files are already generated and included in the tarball.
@@ -26,6 +25,10 @@ RUN curl -fsSL "https://github.com/traefik/traefik/releases/download/${TAG}/trae
 WORKDIR $GOPATH/src/${PKG}
 
 RUN --mount=type=cache,id=gomod,target=/go/pkg/mod go generate
+
+# We want to go generate with the host platforms tools,
+# So we don't set GOOS and GOARCH until we are ready to build the final binary.
+ENV GOOS=${TARGETOS} GOARCH=${TARGETARCH}
 # Extract the codename from the traefik Makefile
 RUN --mount=type=cache,id=gomod,target=/go/pkg/mod \
     CODENAME=$(grep "^CODENAME.*?=" Makefile | cut -d'=' -f2 | tr -d ' ') && \
