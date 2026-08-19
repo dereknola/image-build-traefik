@@ -30,7 +30,7 @@ targets:
     disablesourceinput: true
     spec:
       file: TAG
-      matchpattern: '(?m)^(.*)'
+      matchpattern: '(?m)^(.+)$'
       replacepattern: '{{ source "traefik" }}'
 
   dockerfileSha:
