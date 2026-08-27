@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - 'TAG'
+      - 'Dockerfile'
 
 permissions:
   contents: write
@@ -29,7 +30,7 @@ jobs:
           echo "BUILD_META=${BUILD_META}" >> "$GITHUB_ENV"
           echo "RELEASE_TAG=${TAG}${BUILD_META}" >> "$GITHUB_ENV"
 
-      - name: Validate TAG-only change and release uniqueness
+      - name: Validate release change and release uniqueness
         id: validate
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -40,9 +41,13 @@ jobs:
             if [[ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]]; then
               echo "Push has no previous commit; skipping release"
               SHOULD_RELEASE=false
-            elif [[ "$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")" != "TAG" ]]; then
-              echo "Push changed files other than TAG; skipping release"
-              SHOULD_RELEASE=false
+            else
+              CHANGED_FILES="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")"
+              EXPECTED_CHANGED_FILES=$'Dockerfile\nTAG'
+              if [[ "$(sort <<< "$CHANGED_FILES")" != "$EXPECTED_CHANGED_FILES" ]]; then
+                echo "Push did not change both Dockerfile and TAG; skipping release"
+                SHOULD_RELEASE=false
+              fi
             fi
           fi
 
